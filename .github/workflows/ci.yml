@@ -46,7 +46,7 @@ jobs:
           WATCH_DIR_ENABLED: "false"
         run: |
           alembic upgrade head
-          pytest -v
+          python -m pytest -v
 
   frontend-build:
     name: Frontend Typecheck & Build
