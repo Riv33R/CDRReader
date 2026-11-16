@@ -79,12 +79,41 @@ jobs:
         run: npm run build
 
   docker-build:
-    name: Docker Compose Build Check
+    name: Docker Build & Publish (GHCR)
     runs-on: ubuntu-latest
     needs: [backend-tests, frontend-build]
+    permissions:
+      contents: read
+      packages: write
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build Docker images
-        run: docker compose build
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push backend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          push: ${{ github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') }}
+          tags: |
+            ghcr.io/riv33r/cdrreader-backend:latest
+            ghcr.io/riv33r/cdrreader-backend:${{ github.sha }}
+
+      - name: Build and push frontend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          push: ${{ github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') }}
+          tags: |
+            ghcr.io/riv33r/cdrreader-frontend:latest
+            ghcr.io/riv33r/cdrreader-frontend:${{ github.sha }}

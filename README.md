@@ -26,9 +26,13 @@
    ```bash
    cp .env.example .env
    ```
-2. Запустите сервисы (включая встроенный SFTP-приёмник):
+2. Запустите сервисы (готовые образы автоматически скачаются из GitHub Container Registry, подходит для Portainer / Dockge / Arcane):
    ```bash
-   docker compose up -d --build
+   docker compose up -d
+   ```
+   Если вы хотите собрать образы локально из исходников:
+   ```bash
+   docker compose -f docker-compose.yml -f docker-compose.build.yml up -d --build
    ```
 3. Откройте веб-интерфейс: `http://localhost:8080` (или порт из `FRONTEND_PORT`).
 
