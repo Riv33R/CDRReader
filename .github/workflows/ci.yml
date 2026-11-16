@@ -39,14 +39,18 @@ jobs:
       - name: Install backend dependencies
         run: pip install -r backend/requirements.txt
 
-      - name: Run Alembic migrations & pytest
+      - name: Run Alembic migrations
+        working-directory: backend
+        env:
+          DATABASE_URL: postgresql+asyncpg://cdrreader:cdrreader_test@localhost:5432/cdrreader_test
+        run: alembic upgrade head
+
+      - name: Run pytest
         working-directory: backend
         env:
           DATABASE_URL: postgresql+asyncpg://cdrreader:cdrreader_test@localhost:5432/cdrreader_test
           WATCH_DIR_ENABLED: "false"
-        run: |
-          alembic upgrade head
-          python -m pytest -v
+        run: python -m pytest -v
 
   frontend-build:
     name: Frontend Typecheck & Build
