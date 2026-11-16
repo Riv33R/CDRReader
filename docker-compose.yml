@@ -1,0 +1,79 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: cdrreader-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-cdrreader}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cdrreader_secret_change_me}
+      POSTGRES_DB: ${POSTGRES_DB:-cdrreader}
+      TZ: ${TZ:-UTC}
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-cdrreader} -d ${POSTGRES_DB:-cdrreader}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: cdrreader-backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-cdrreader}:${POSTGRES_PASSWORD:-cdrreader_secret_change_me}@db:5432/${POSTGRES_DB:-cdrreader}
+      WATCH_DIR_ENABLED: ${WATCH_DIR_ENABLED:-true}
+      WATCH_DIR: /data/cdr_inbox
+      ARCHIVE_DIR: /data/cdr_archive
+      ERROR_DIR: /data/cdr_error
+      WATCH_POLL_INTERVAL: ${WATCH_POLL_INTERVAL:-15}
+      SFTP_POLLER_ENABLED: ${SFTP_POLLER_ENABLED:-false}
+      SFTP_HOST: ${SFTP_HOST:-}
+      SFTP_PORT: ${SFTP_PORT:-22}
+      SFTP_USER: ${SFTP_USER:-}
+      SFTP_PASSWORD: ${SFTP_PASSWORD:-}
+      SFTP_REMOTE_DIR: ${SFTP_REMOTE_DIR:-/cdr}
+      SFTP_POLL_INTERVAL: ${SFTP_POLL_INTERVAL:-60}
+      TZ: ${TZ:-UTC}
+    volumes:
+      - ./data/cdr_inbox:/data/cdr_inbox
+      - ./data/cdr_archive:/data/cdr_archive
+      - ./data/cdr_error:/data/cdr_error
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')\""]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: cdrreader-frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "${FRONTEND_PORT:-8080}:80"
+
+  # Optional SFTP receiver for Cisco CUCM Billing/CDR push:
+  # Run with: docker compose --profile sftp up -d
+  sftp:
+    image: atmoz/sftp:alpine
+    container_name: cdrreader-sftp
+    profiles: ["sftp"]
+    restart: unless-stopped
+    ports:
+      - "${SFTP_SERVER_PORT:-2222}:22"
+    command: "${SFTP_SERVER_USER:-cucm_cdr}:${SFTP_SERVER_PASSWORD:-cucm_cdr_secret}:1000:1000:cdr"
+    volumes:
+      - ./data/cdr_inbox:/home/${SFTP_SERVER_USER:-cucm_cdr}/cdr
+
+volumes:
+  pg_data:
