@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Any
 
-from sqlalchemy import Integer, case, cast, func, select
+from sqlalchemy import Integer, case, cast, func, literal_column, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.cause_codes import get_cause_info
@@ -50,7 +50,7 @@ async def get_dashboard_stats(
 
     # 2. Time series
     trunc_unit = "hour" if granularity == "hour" else "day"
-    bucket_col = func.date_trunc(trunc_unit, CdrRecord.date_time_origination).label("bucket")
+    bucket_col = func.date_trunc(literal_column(f"'{trunc_unit}'"), CdrRecord.date_time_origination).label("bucket")
     ts_stmt = (
         select(
             bucket_col,
@@ -59,8 +59,8 @@ async def get_dashboard_stats(
             func.coalesce(func.avg(CdrRecord.duration), 0.0).label("avg_duration"),
         )
         .where(CdrRecord.date_time_origination.is_not(None), *filters)
-        .group_by(bucket_col)
-        .order_by(bucket_col)
+        .group_by(literal_column("bucket"))
+        .order_by(literal_column("bucket"))
     )
     ts_rows = (await db.execute(ts_stmt)).all()
     time_series = [
