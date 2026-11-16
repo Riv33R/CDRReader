@@ -62,12 +62,10 @@ services:
     ports:
       - "${FRONTEND_PORT:-8080}:80"
 
-  # Optional SFTP receiver for Cisco CUCM Billing/CDR push:
-  # Run with: docker compose --profile sftp up -d
+  # Built-in SFTP receiver for Cisco CUCM Billing/CDR push:
   sftp:
     image: atmoz/sftp:alpine
     container_name: cdrreader-sftp
-    profiles: ["sftp"]
     restart: unless-stopped
     ports:
       - "${SFTP_SERVER_PORT:-2222}:22"
