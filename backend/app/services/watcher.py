@@ -2,6 +2,7 @@ import asyncio
 import logging
 import os
 import shutil
+import stat
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -118,7 +119,7 @@ def _download_sftp_files_sync(known_filenames: set[str]) -> list[str]:
         try:
             for attr in sftp.listdir_attr(settings.SFTP_REMOTE_DIR):
                 name = attr.filename
-                if name.startswith(".") or name in known_filenames:
+                if (attr.st_mode is not None and stat.S_ISDIR(attr.st_mode)) or name.startswith(".") or name in known_filenames:
                     continue
                 remote_path = f"{settings.SFTP_REMOTE_DIR.rstrip('/')}/{name}"
                 tmp_path = watch_dir / f".{name}.tmp"

@@ -80,7 +80,7 @@ async def get_dashboard_stats(
     cause_stmt = (
         select(cause_expr, func.count(CdrRecord.id).label("cnt"))
         .where(*filters)
-        .group_by(cause_expr)
+        .group_by(literal_column("cause_code"))
         .order_by(func.count(CdrRecord.id).desc())
         .limit(10)
     )

@@ -39,7 +39,7 @@ services:
       SFTP_POLL_INTERVAL: ${SFTP_POLL_INTERVAL:-60}
       TZ: ${TZ:-UTC}
     volumes:
-      - ./data/cdr_inbox:/data/cdr_inbox
+      - ${CDR_INBOX_DIR:-./data/cdr_inbox}:/data/cdr_inbox
       - ./data/cdr_archive:/data/cdr_archive
       - ./data/cdr_error:/data/cdr_error
     healthcheck:
