@@ -3,78 +3,58 @@ import { NavLink } from "react-router-dom";
 import type { ReactNode } from "react";
 
 const navItems = [
-  { to: "/", label: "Сводка и аналитика", icon: BarChart3 },
-  { to: "/calls", label: "Журнал вызовов", icon: ListFilter },
-  { to: "/imports", label: "Загрузка и импорт", icon: UploadCloud },
+  { to: "/", label: "Дашборд", icon: BarChart3 },
+  { to: "/calls", label: "Журнал звонков", icon: ListFilter },
+  { to: "/imports", label: "Импорт CDR/CMR", icon: UploadCloud },
 ];
 
 export function Layout({ children }: { children: ReactNode }) {
   return (
-    <div className="min-h-screen flex bg-[#f4f6f9] text-slate-900">
-      <aside className="w-60 bg-slate-950 text-slate-200 flex flex-col shrink-0 border-r border-slate-800">
-        <div className="h-14 px-4 flex items-center gap-3 border-b border-slate-800/80">
-          <div className="w-8 h-8 rounded-md bg-sky-700 flex items-center justify-center shrink-0">
-            <PhoneCall className="w-4 h-4 text-white" />
-          </div>
-          <div className="min-w-0">
-            <div className="font-semibold text-xs uppercase tracking-wider text-white truncate">
-              Cisco CDR Reader
+    <div className="min-h-screen bg-dark-900 text-slate-100 flex flex-col">
+      <header className="border-b border-slate-800 bg-dark-800/80 backdrop-blur sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-400 flex items-center justify-center shadow-lg shadow-brand-500/20 shrink-0">
+              <PhoneCall className="w-5 h-5 text-white" />
             </div>
-            <div className="text-[11px] text-slate-400 truncate">CUCM Voice Analytics</div>
+            <div className="min-w-0">
+              <h1 className="text-base sm:text-lg font-bold tracking-tight text-white flex items-center gap-2 truncate">
+                Cisco CDR Reader
+                <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-brand-500/10 text-brand-400 border border-brand-500/20">
+                  CUCM Analytics
+                </span>
+              </h1>
+              <p className="text-xs text-slate-400 hidden sm:block">
+                Анализ вызовов и качества речи Cisco Unified Communications Manager
+              </p>
+            </div>
           </div>
+
+          <nav className="flex items-center gap-1.5">
+            {navItems.map(({ to, label, icon: Icon }) => (
+              <NavLink
+                key={to}
+                to={to}
+                end={to === "/"}
+                className={({ isActive }) =>
+                  `inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-semibold transition border ${
+                    isActive
+                      ? "bg-brand-500/20 text-white border-brand-500 shadow-sm shadow-brand-500/20"
+                      : "bg-slate-800/70 text-slate-300 border-slate-700 hover:bg-slate-700 hover:text-white"
+                  }`
+                }
+              >
+                <Icon className="w-3.5 h-3.5" />
+                <span className="hidden md:inline">{label}</span>
+              </NavLink>
+            ))}
+          </nav>
         </div>
+      </header>
 
-        <div className="px-4 pt-4 pb-2 text-[10px] font-semibold uppercase tracking-widest text-slate-500">
-          Навигация
-        </div>
-
-        <nav className="flex-1 px-2 space-y-0.5">
-          {navItems.map(({ to, label, icon: Icon }) => (
-            <NavLink
-              key={to}
-              to={to}
-              end={to === "/"}
-              className={({ isActive }) =>
-                `flex items-center gap-2.5 px-3 py-2 rounded-md text-xs font-medium transition-colors border-l-2 ${
-                  isActive
-                    ? "bg-slate-900 text-white border-sky-500"
-                    : "text-slate-400 border-transparent hover:bg-slate-900/60 hover:text-slate-200"
-                }`
-              }
-            >
-              <Icon className="w-4 h-4 shrink-0" />
-              {label}
-            </NavLink>
-          ))}
-        </nav>
-
-        <div className="p-4 border-t border-slate-800/80 text-[11px] text-slate-500 space-y-1">
-          <div className="flex items-center justify-between">
-            <span>Формат</span>
-            <span className="font-mono text-slate-400">CUCM CDR/CMR</span>
-          </div>
-          <div className="flex items-center justify-between">
-            <span>Архивы</span>
-            <span className="font-mono text-slate-400">CSV / GZ / ZIP</span>
-          </div>
-        </div>
-      </aside>
-
-      <div className="flex-1 min-w-0 flex flex-col">
-        <header className="h-14 bg-white border-b border-slate-200 px-6 flex items-center justify-between shrink-0">
-          <div className="text-xs font-medium text-slate-500 uppercase tracking-wider">
-            Unified Communications • Call Detail Records
-          </div>
-          <div className="flex items-center gap-2 text-xs text-slate-500">
-            <span className="w-2 h-2 rounded-full bg-emerald-600" />
-            <span>Система активна</span>
-          </div>
-        </header>
-
-        <main className="flex-1 min-w-0 overflow-auto">
-          <div className="max-w-7xl mx-auto p-6">{children}</div>
-        </main>
-      </div>
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {children}
+      </main>
     </div>
   );
 }
