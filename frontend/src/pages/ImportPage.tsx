@@ -56,14 +56,14 @@ export function ImportPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold text-white tracking-tight">Импорт CDR / CMR файлов</h2>
-          <p className="text-xs text-slate-400 mt-0.5">
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Импорт CDR / CMR файлов</h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
             Ручная загрузка или автоматический приём из watch-dir / системного SFTP
           </p>
         </div>
         <button
           onClick={loadJobs}
-          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-semibold text-slate-200 transition"
+          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 transition"
         >
           <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} /> Обновить
         </button>
@@ -83,7 +83,7 @@ export function ImportPage() {
         className={`block border-2 border-dashed rounded-2xl p-10 text-center cursor-pointer transition-all ${
           dragOver
             ? "border-brand-500 bg-brand-500/10"
-            : "border-slate-700 bg-dark-800/90 hover:border-brand-500/60"
+            : "border-slate-300 dark:border-slate-700 bg-white dark:bg-dark-800/90 hover:border-brand-500/60"
         }`}
       >
         <input
@@ -94,18 +94,18 @@ export function ImportPage() {
         />
         <div className="flex flex-col items-center gap-3">
           {uploading ? (
-            <Loader2 className="w-8 h-8 text-brand-400 animate-spin" />
+            <Loader2 className="w-8 h-8 text-brand-500 dark:text-brand-400 animate-spin" />
           ) : (
             <div className="w-12 h-12 rounded-xl bg-brand-500/15 border border-brand-500/30 flex items-center justify-center">
-              <FileUp className="w-6 h-6 text-brand-400" />
+              <FileUp className="w-6 h-6 text-brand-600 dark:text-brand-400" />
             </div>
           )}
-          <div className="text-sm font-semibold text-white">
+          <div className="text-sm font-semibold text-slate-900 dark:text-white">
             {uploading
               ? "Выполняется парсинг и запись в PostgreSQL..."
               : "Перетащите файлы CUCM CDR/CMR сюда или нажмите для выбора"}
           </div>
-          <div className="text-xs text-slate-400">
+          <div className="text-xs text-slate-500 dark:text-slate-400">
             Форматы: CSV, файлы выгрузки CUCM без расширения (cdr_* / cmr_*), архивы .gz и .zip
           </div>
         </div>
@@ -115,21 +115,21 @@ export function ImportPage() {
         <div
           className={`p-4 rounded-xl text-xs font-medium border ${
             message.type === "ok"
-              ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-300"
-              : "bg-rose-500/10 border-rose-500/30 text-rose-300"
+              ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-300"
+              : "bg-rose-500/10 border-rose-500/30 text-rose-700 dark:text-rose-300"
           }`}
         >
           {message.text}
         </div>
       )}
 
-      <div className="bg-dark-800/90 rounded-2xl border border-slate-800 shadow-xl overflow-hidden">
-        <div className="px-5 py-3.5 border-b border-slate-800 bg-dark-900/60 font-bold text-xs uppercase tracking-wider text-slate-400">
+      <div className="bg-white dark:bg-dark-800/90 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-xl overflow-hidden">
+        <div className="px-5 py-3.5 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-dark-900/60 font-bold text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400">
           Журнал задач импорта
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-xs text-left">
-            <thead className="bg-dark-900/90 border-b border-slate-800 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+            <thead className="bg-slate-50 dark:bg-dark-900/90 border-b border-slate-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
               <tr>
                 <th className="px-4 py-3">Файл</th>
                 <th className="px-4 py-3">Источник</th>
@@ -141,45 +141,47 @@ export function ImportPage() {
                 <th className="px-4 py-3">Дата</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/80">
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
               {jobs.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-4 py-10 text-center text-slate-500">
+                  <td colSpan={8} className="px-4 py-10 text-center text-slate-400 dark:text-slate-500">
                     Загрузок пока не было
                   </td>
                 </tr>
               ) : (
                 jobs.map((job) => (
-                  <tr key={job.id} className="hover:bg-slate-800/50">
-                    <td className="px-4 py-2.5 font-mono font-medium text-white">
+                  <tr key={job.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                    <td className="px-4 py-2.5 font-mono font-medium text-slate-900 dark:text-white">
                       <div>{job.filename}</div>
                       {job.error_message && (
-                        <div className="text-[11px] text-rose-400 mt-0.5">{job.error_message}</div>
+                        <div className="text-[11px] text-rose-600 dark:text-rose-400 mt-0.5">{job.error_message}</div>
                       )}
                     </td>
-                    <td className="px-4 py-2.5 font-mono text-slate-400">{job.source}</td>
-                    <td className="px-4 py-2.5 uppercase font-mono font-semibold text-indigo-300">
+                    <td className="px-4 py-2.5 font-mono text-slate-500 dark:text-slate-400">{job.source}</td>
+                    <td className="px-4 py-2.5 uppercase font-mono font-semibold text-indigo-600 dark:text-indigo-300">
                       {job.file_type}
                     </td>
                     <td className="px-4 py-2.5">
                       {job.status === "completed" ? (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md border bg-emerald-500/15 text-emerald-300 border-emerald-500/30 text-[11px] font-semibold">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md border bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30 text-[11px] font-semibold">
                           <CheckCircle2 className="w-3 h-3" /> Успешно
                         </span>
                       ) : job.status === "failed" ? (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md border bg-rose-500/15 text-rose-300 border-rose-500/30 text-[11px] font-semibold">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md border bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-500/30 text-[11px] font-semibold">
                           <XCircle className="w-3 h-3" /> Ошибка
                         </span>
                       ) : (
-                        <span className="text-[11px] text-amber-300 font-semibold">Обработка...</span>
+                        <span className="text-[11px] text-amber-600 dark:text-amber-300 font-semibold">Обработка...</span>
                       )}
                     </td>
-                    <td className="px-4 py-2.5 font-mono tabular-nums text-slate-200">{job.total_rows}</td>
-                    <td className="px-4 py-2.5 font-mono tabular-nums font-bold text-emerald-400">
+                    <td className="px-4 py-2.5 font-mono tabular-nums text-slate-700 dark:text-slate-200">{job.total_rows}</td>
+                    <td className="px-4 py-2.5 font-mono tabular-nums font-bold text-emerald-600 dark:text-emerald-400">
                       {job.inserted_rows}
                     </td>
-                    <td className="px-4 py-2.5 font-mono tabular-nums text-slate-400">{job.duplicate_rows}</td>
-                    <td className="px-4 py-2.5 font-mono text-slate-400 whitespace-nowrap">
+                    <td className="px-4 py-2.5 font-mono tabular-nums text-slate-500 dark:text-slate-400">
+                      {job.duplicate_rows}
+                    </td>
+                    <td className="px-4 py-2.5 font-mono text-slate-500 dark:text-slate-400 whitespace-nowrap">
                       {formatDateTime(job.created_at)}
                     </td>
                   </tr>
