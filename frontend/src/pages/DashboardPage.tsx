@@ -127,7 +127,7 @@ export function DashboardPage() {
       ) : stats ? (
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="bg-white dark:bg-gradient-to-br dark:from-dark-800 dark:to-indigo-950/40 rounded-2xl border border-indigo-200 dark:border-indigo-500/30 p-6 shadow-sm dark:shadow-xl">
+            <div className="bg-white dark:bg-dark-800/90 rounded-2xl border border-indigo-200 dark:border-indigo-500/30 p-6 shadow-sm dark:shadow-xl">
               <div className="flex items-center justify-between text-indigo-600 dark:text-indigo-300 text-xs font-bold uppercase tracking-wider">
                 <span>Всего вызовов</span>
                 <PhoneOutgoing className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
@@ -140,7 +140,7 @@ export function DashboardPage() {
               </div>
             </div>
 
-            <div className="bg-white dark:bg-gradient-to-br dark:from-dark-800 dark:to-emerald-950/40 rounded-2xl border border-emerald-200 dark:border-emerald-500/30 p-6 shadow-sm dark:shadow-xl">
+            <div className="bg-white dark:bg-dark-800/90 rounded-2xl border border-emerald-200 dark:border-emerald-500/30 p-6 shadow-sm dark:shadow-xl">
               <div className="flex items-center justify-between text-emerald-700 dark:text-emerald-300 text-xs font-bold uppercase tracking-wider">
                 <span>Отвечено</span>
                 <PhoneIncoming className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
@@ -153,7 +153,7 @@ export function DashboardPage() {
               </div>
             </div>
 
-            <div className="bg-white dark:bg-gradient-to-br dark:from-dark-800 dark:to-rose-950/30 rounded-2xl border border-rose-200 dark:border-rose-500/30 p-6 shadow-sm dark:shadow-xl">
+            <div className="bg-white dark:bg-dark-800/90 rounded-2xl border border-rose-200 dark:border-rose-500/30 p-6 shadow-sm dark:shadow-xl">
               <div className="flex items-center justify-between text-rose-700 dark:text-rose-300 text-xs font-bold uppercase tracking-wider">
                 <span>Пропущено / Ошибки</span>
                 <PhoneMissed className="w-4 h-4 text-rose-600 dark:text-rose-400" />
