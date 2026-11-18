@@ -35,7 +35,14 @@ def _fmt_dt(dt) -> str:
 
 
 def _record_to_row(rec: CdrRecord) -> list[str | int]:
-    cause_code = rec.dest_cause_value if rec.dest_cause_value is not None else rec.orig_cause_value
+    if rec.dest_cause_value:
+        cause_code: int | None = rec.dest_cause_value
+    elif rec.orig_cause_value:
+        cause_code = rec.orig_cause_value
+    elif rec.dest_cause_value is not None:
+        cause_code = rec.dest_cause_value
+    else:
+        cause_code = rec.orig_cause_value
     cause_info = get_cause_info(cause_code)
     return [
         rec.id,

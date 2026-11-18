@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
 from sqlalchemy import desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -13,8 +13,11 @@ router = APIRouter(prefix="/imports", tags=["imports"])
 
 
 @router.get("", response_model=list[ImportJobOut])
-async def list_import_jobs(limit: int = 50, db: AsyncSession = Depends(get_db)) -> list[ImportJobOut]:
-    stmt = select(ImportJob).order_by(desc(ImportJob.created_at), desc(ImportJob.id)).limit(min(limit, 200))
+async def list_import_jobs(
+    limit: int = Query(50, ge=1, le=200),
+    db: AsyncSession = Depends(get_db),
+) -> list[ImportJobOut]:
+    stmt = select(ImportJob).order_by(desc(ImportJob.created_at), desc(ImportJob.id)).limit(limit)
     rows = (await db.execute(stmt)).scalars().all()
     return [ImportJobOut.model_validate(r) for r in rows]
 

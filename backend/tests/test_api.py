@@ -60,3 +60,46 @@ async def test_full_upload_query_dashboard_and_export_flow(client: AsyncClient):
     r_jobs = await client.get("/api/imports")
     assert r_jobs.status_code == 200
     assert len(r_jobs.json()) == 2
+
+
+async def test_edge_cases_validation_and_cause_fallback(client: AsyncClient):
+    # Negative limit should return 422
+    r_bad_limit = await client.get("/api/imports?limit=-1")
+    assert r_bad_limit.status_code == 422
+
+    # Corrupt zip/gz returns 400 (not 500)
+    r_bad_zip = await client.post(
+        "/api/imports/upload",
+        files={"file": ("corrupt.zip", b"not-a-zip", "application/zip")},
+    )
+    assert r_bad_zip.status_code == 400
+
+    r_bad_gz = await client.post(
+        "/api/imports/upload",
+        files={"file": ("corrupt.csv.gz", b"not-a-gzip", "application/gzip")},
+    )
+    assert r_bad_gz.status_code == 400
+
+    # CDR where destCause_value=0 and origCause_value=16 -> dashboard & export must resolve to 16, not 0
+    cdr_zero_dest = (
+        "cdrRecordType,globalCallID_callManagerId,globalCallID_callId,origLegCallIdentifier,"
+        "dateTimeOrigination,callingPartyNumber,originalCalledPartyNumber,finalCalledPartyNumber,"
+        "dateTimeConnect,dateTimeDisconnect,lastRedirectDn,duration,origDeviceName,destDeviceName,"
+        "origCause_value,destCause_value,origMediaTransportAddress_IP,destMediaTransportAddress_IP,destLegIdentifier\n"
+        "1,1,5555,90001,1700000500,1010,1020,1020,1700000502,1700000550,1020,48,SEP1,SEP2,16,0,167772682,335544842,90002\n"
+    )
+    r_up = await client.post(
+        "/api/imports/upload",
+        files={"file": ("cdr_zero_dest.csv", cdr_zero_dest.encode("utf-8"), "text/csv")},
+    )
+    assert r_up.status_code == 200
+
+    r_dash = await client.get("/api/dashboard/stats")
+    assert r_dash.status_code == 200
+    causes = r_dash.json()["cause_distribution"]
+    assert len(causes) == 1
+    assert causes[0]["code"] == 16
+
+    r_csv = await client.get("/api/calls/export?format=csv")
+    assert r_csv.status_code == 200
+    assert "Normal Call Clearing" in r_csv.text

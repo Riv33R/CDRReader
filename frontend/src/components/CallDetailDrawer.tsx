@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { X, Activity, Phone, Clock, Server } from "lucide-react";
 import type { CdrDetail } from "../types/cdr";
 import { formatDateTime, formatDuration } from "../utils/format";
@@ -9,10 +10,24 @@ interface Props {
 }
 
 export function CallDetailDrawer({ detail, loading, onClose }: Props) {
+  useEffect(() => {
+    if (!detail && !loading) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [detail, loading, onClose]);
+
   if (!detail && !loading) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-slate-950/50 dark:bg-black/70 backdrop-blur-sm">
+    <div
+      className="fixed inset-0 z-50 flex justify-end bg-slate-950/50 dark:bg-black/70 backdrop-blur-sm"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
       <div className="w-full max-w-2xl bg-white dark:bg-dark-800 h-full shadow-2xl border-l border-slate-200 dark:border-slate-800 flex flex-col overflow-hidden text-slate-900 dark:text-slate-100">
         <div className="px-6 py-4 bg-slate-50 dark:bg-dark-900/70 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
           <div>

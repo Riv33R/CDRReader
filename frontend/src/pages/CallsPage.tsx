@@ -34,8 +34,8 @@ export function CallsPage() {
     setError(null);
     const query: CallFilters = {
       ...f,
-      date_from: f.date_from ? new Date(f.date_from).toISOString() : undefined,
-      date_to: f.date_to ? new Date(`${f.date_to}T23:59:59`).toISOString() : undefined,
+      date_from: f.date_from ? new Date(`${f.date_from}T00:00:00`).toISOString() : undefined,
+      date_to: f.date_to ? new Date(`${f.date_to}T23:59:59.999`).toISOString() : undefined,
     };
     api
       .getCalls(query)
@@ -64,14 +64,17 @@ export function CallsPage() {
     api
       .getCallDetail(id)
       .then(setDetail)
-      .catch(() => setDetail(null))
+      .catch((err) => {
+        setDetail(null);
+        setError(err instanceof Error ? err.message : "Не удалось загрузить детали вызова");
+      })
       .finally(() => setDetailLoading(false));
   };
 
   const exportFilters: CallFilters = {
     ...filters,
-    date_from: filters.date_from ? new Date(filters.date_from).toISOString() : undefined,
-    date_to: filters.date_to ? new Date(`${filters.date_to}T23:59:59`).toISOString() : undefined,
+    date_from: filters.date_from ? new Date(`${filters.date_from}T00:00:00`).toISOString() : undefined,
+    date_to: filters.date_to ? new Date(`${filters.date_to}T23:59:59.999`).toISOString() : undefined,
   };
 
   return (
@@ -212,7 +215,10 @@ export function CallsPage() {
                 </tr>
               ) : (
                 data.items.map((call) => {
-                  const cause = call.dest_cause_info ?? call.orig_cause_info;
+                  const cause =
+                    call.dest_cause_info && call.dest_cause_info.code !== 0
+                      ? call.dest_cause_info
+                      : (call.orig_cause_info ?? call.dest_cause_info);
                   return (
                     <tr
                       key={call.id}

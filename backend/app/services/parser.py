@@ -301,9 +301,16 @@ async def parse_file_bytes(db: AsyncSession, content: bytes, filename: str) -> P
     if lower.endswith(".zip"):
         aggregated = ParseStats(file_type="cdr")
         seen_types: set[str] = set()
-        with zipfile.ZipFile(io.BytesIO(content)) as zf:
+        try:
+            zf_ctx = zipfile.ZipFile(io.BytesIO(content))
+        except zipfile.BadZipFile as exc:
+            raise ValueError(f"Invalid ZIP archive '{filename}'") from exc
+        with zf_ctx as zf:
             for member in zf.infolist():
                 if member.is_dir():
+                    continue
+                member_parts = member.filename.replace("\\", "/").split("/")
+                if any(p == "__MACOSX" or p.startswith(".") for p in member_parts):
                     continue
                 member_bytes = zf.read(member.filename)
                 sub_stats = await parse_file_bytes(db, member_bytes, member.filename)
@@ -320,7 +327,10 @@ async def parse_file_bytes(db: AsyncSession, content: bytes, filename: str) -> P
         return aggregated
 
     if lower.endswith(".gz"):
-        decompressed = gzip.decompress(content)
+        try:
+            decompressed = gzip.decompress(content)
+        except (gzip.BadGzipFile, OSError, EOFError) as exc:
+            raise ValueError(f"Invalid GZIP archive '{filename}'") from exc
         text_stream = io.TextIOWrapper(io.BytesIO(decompressed), encoding="utf-8", errors="replace")
         return await parse_csv_stream(db, text_stream, filename[:-3])
 

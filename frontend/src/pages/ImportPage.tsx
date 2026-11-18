@@ -16,7 +16,12 @@ export function ImportPage() {
     api
       .getImportJobs()
       .then(setJobs)
-      .catch(() => {})
+      .catch((err) =>
+        setMessage({
+          type: "err",
+          text: err instanceof Error ? err.message : "Не удалось загрузить журнал импорта",
+        })
+      )
       .finally(() => setLoading(false));
   }, []);
 
@@ -90,7 +95,10 @@ export function ImportPage() {
           type="file"
           multiple
           className="hidden"
-          onChange={(e) => void handleFiles(e.target.files)}
+          onChange={(e) => {
+            void handleFiles(e.target.files);
+            e.target.value = "";
+          }}
         />
         <div className="flex flex-col items-center gap-3">
           {uploading ? (

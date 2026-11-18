@@ -59,8 +59,8 @@ export function DashboardPage() {
     setError(null);
     api
       .getDashboardStats({
-        date_from: dateFrom ? new Date(dateFrom).toISOString() : undefined,
-        date_to: dateTo ? new Date(`${dateTo}T23:59:59`).toISOString() : undefined,
+        date_from: dateFrom ? new Date(`${dateFrom}T00:00:00`).toISOString() : undefined,
+        date_to: dateTo ? new Date(`${dateTo}T23:59:59.999`).toISOString() : undefined,
         granularity,
       })
       .then((data) => {
@@ -89,7 +89,7 @@ export function DashboardPage() {
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 bg-white dark:bg-dark-800/90 p-2 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs">
+        <div className="flex flex-wrap items-center gap-2 bg-white dark:bg-dark-800/90 p-2 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
           <input
             type="date"
             value={dateFrom}

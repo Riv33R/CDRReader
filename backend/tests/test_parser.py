@@ -66,6 +66,7 @@ async def test_parse_zip_with_cdr_and_cmr():
     zip_buf = io.BytesIO()
     with zipfile.ZipFile(zip_buf, "w", zipfile.ZIP_DEFLATED) as zf:
         zf.writestr("cdr_test.csv", SAMPLE_CDR_CSV)
+        zf.writestr("__MACOSX/._cdr_test.csv", "binary junk")
         zf.writestr("cmr_test.csv.gz", gzip.compress(SAMPLE_CMR_CSV.encode("utf-8")))
 
     async with AsyncSessionLocal() as db:

@@ -43,11 +43,12 @@ async def process_watch_dir_once() -> int:
             continue
 
         # Ensure file is not actively being written by SFTP/copy
-        size_before = entry.stat().st_size
-        await asyncio.sleep(0.3)
-        if not entry.exists():
+        try:
+            size_before = entry.stat().st_size
+            await asyncio.sleep(0.3)
+            size_after = entry.stat().st_size
+        except FileNotFoundError:
             continue
-        size_after = entry.stat().st_size
         if size_before != size_after or size_after == 0:
             continue
 
@@ -138,7 +139,9 @@ def _download_sftp_files_sync(known_filenames: set[str]) -> list[str]:
 
 async def poll_sftp_once() -> list[str]:
     async with AsyncSessionLocal() as db:
-        result = await db.execute(select(ImportJob.filename).where(ImportJob.status == "completed"))
+        result = await db.execute(
+            select(ImportJob.filename).where(ImportJob.status.in_(["completed", "failed"]))
+        )
         known = set(result.scalars().all())
     return await asyncio.to_thread(_download_sftp_files_sync, known)
 

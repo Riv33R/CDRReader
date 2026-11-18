@@ -75,8 +75,12 @@ async def get_dashboard_stats(
         if row.bucket is not None
     ]
 
-    # 3. Cause code distribution (dest_cause_value fallback to orig_cause_value)
-    cause_expr = func.coalesce(CdrRecord.dest_cause_value, CdrRecord.orig_cause_value, 0).label("cause_code")
+    # 3. Cause code distribution (prefer non-zero dest_cause_value, fallback to orig_cause_value)
+    cause_expr = func.coalesce(
+        func.nullif(CdrRecord.dest_cause_value, 0),
+        func.nullif(CdrRecord.orig_cause_value, 0),
+        0,
+    ).label("cause_code")
     cause_stmt = (
         select(cause_expr, func.count(CdrRecord.id).label("cnt"))
         .where(*filters)
