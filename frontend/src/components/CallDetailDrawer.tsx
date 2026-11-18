@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { X, Activity, Phone, Clock, Server } from "lucide-react";
 import type { CdrDetail } from "../types/cdr";
-import { formatDateTime, formatDuration } from "../utils/format";
+import { formatDateTime, formatDuration, getDirectionMeta } from "../utils/format";
 
 interface Props {
   detail: CdrDetail | null;
@@ -31,12 +31,21 @@ export function CallDetailDrawer({ detail, loading, onClose }: Props) {
       <div className="w-full max-w-2xl bg-white dark:bg-dark-800 h-full shadow-2xl border-l border-slate-200 dark:border-slate-800 flex flex-col overflow-hidden text-slate-900 dark:text-slate-100">
         <div className="px-6 py-4 bg-slate-50 dark:bg-dark-900/70 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
           <div>
-            <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2 flex-wrap">
               Карточка вызова {detail ? `#${detail.id}` : ""}
               {detail && (
-                <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-brand-500/15 text-brand-700 dark:text-brand-400 border border-brand-500/25">
-                  GCID {detail.global_call_id_cm ?? "?"}-{detail.global_call_id ?? "?"}
-                </span>
+                <>
+                  <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-brand-500/15 text-brand-700 dark:text-brand-400 border border-brand-500/25">
+                    GCID {detail.global_call_id_cm ?? "?"}-{detail.global_call_id ?? "?"}
+                  </span>
+                  <span
+                    className={`text-[11px] font-semibold px-2 py-0.5 rounded border ${
+                      getDirectionMeta(detail.direction).badgeClass
+                    }`}
+                  >
+                    {getDirectionMeta(detail.direction).label}
+                  </span>
+                </>
               )}
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">

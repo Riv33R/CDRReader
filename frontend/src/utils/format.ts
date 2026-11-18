@@ -21,3 +21,26 @@ export function formatDuration(seconds: number): string {
   if (m > 0) return `${m}м ${s}с`;
   return `${s}с`;
 }
+
+export function getDirectionMeta(direction: string | undefined): { label: string; short: string; badgeClass: string } {
+  switch (direction) {
+    case "inbound":
+      return {
+        label: "↙ Входящий",
+        short: "Входящий",
+        badgeClass: "bg-sky-500/15 text-sky-700 dark:text-sky-300 border-sky-500/30",
+      };
+    case "outbound":
+      return {
+        label: "↗ Исходящий",
+        short: "Исходящий",
+        badgeClass: "bg-brand-500/15 text-brand-700 dark:text-brand-300 border-brand-500/30",
+      };
+    default:
+      return {
+        label: "⇄ Внутренний",
+        short: "Внутренний",
+        badgeClass: "bg-slate-500/10 text-slate-600 dark:text-slate-300 border-slate-400/30 dark:border-slate-600",
+      };
+  }
+}

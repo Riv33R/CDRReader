@@ -25,6 +25,9 @@ class Settings(BaseSettings):
     SFTP_REMOTE_DIR: str = "/cdr"
     SFTP_POLL_INTERVAL: int = 60
 
+    # Call direction classification (digits <= this length are treated as internal extensions)
+    INTERNAL_NUMBER_MAX_LEN: int = 6
+
     CORS_ORIGINS: list[str] = ["*"]
 
 

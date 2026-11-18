@@ -49,6 +49,7 @@ export function DashboardPage() {
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [granularity, setGranularity] = useState<"day" | "hour">("day");
+  const [direction, setDirection] = useState<"" | "inbound" | "outbound" | "internal">("");
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -62,6 +63,7 @@ export function DashboardPage() {
         date_from: dateFrom ? new Date(`${dateFrom}T00:00:00`).toISOString() : undefined,
         date_to: dateTo ? new Date(`${dateTo}T23:59:59.999`).toISOString() : undefined,
         granularity,
+        direction: direction || undefined,
       })
       .then((data) => {
         if (active) setStats(data);
@@ -75,7 +77,7 @@ export function DashboardPage() {
     return () => {
       active = false;
     };
-  }, [dateFrom, dateTo, granularity]);
+  }, [dateFrom, dateTo, granularity, direction]);
 
   return (
     <div className="space-y-6">
@@ -105,6 +107,17 @@ export function DashboardPage() {
             className="text-xs font-mono bg-slate-50 dark:bg-dark-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-slate-800 dark:text-slate-200 focus:outline-none focus:border-brand-500"
             aria-label="Дата по"
           />
+          <select
+            value={direction}
+            onChange={(e) => setDirection(e.target.value as "" | "inbound" | "outbound" | "internal")}
+            aria-label="Направление"
+            className="text-xs bg-slate-50 dark:bg-dark-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-slate-800 dark:text-slate-200 focus:outline-none focus:border-brand-500"
+          >
+            <option value="">Все направления</option>
+            <option value="inbound">↙ Входящие</option>
+            <option value="outbound">↗ Исходящие</option>
+            <option value="internal">⇄ Внутренние</option>
+          </select>
           <select
             value={granularity}
             onChange={(e) => setGranularity(e.target.value as "day" | "hour")}

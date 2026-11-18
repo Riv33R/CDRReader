@@ -19,6 +19,7 @@ async def get_dashboard_stats(
     date_from: datetime | None = None,
     date_to: datetime | None = None,
     granularity: str = "day",
+    direction: str | None = None,
 ) -> DashboardStatsOut:
     """Aggregate CDR statistics for the dashboard."""
     filters: list[Any] = []
@@ -26,6 +27,8 @@ async def get_dashboard_stats(
         filters.append(CdrRecord.date_time_origination >= date_from)
     if date_to is not None:
         filters.append(CdrRecord.date_time_origination <= date_to)
+    if direction:
+        filters.append(CdrRecord.direction == direction)
 
     # 1. KPI summary
     kpi_stmt = select(

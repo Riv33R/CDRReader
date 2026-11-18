@@ -1,3 +1,5 @@
+export type CallDirection = "inbound" | "outbound" | "internal";
+
 export interface CauseInfo {
   code: number;
   name: string;
@@ -31,6 +33,7 @@ export interface CdrRecord {
   last_redirect_dn: string | null;
   duration: number;
   answered: boolean;
+  direction: CallDirection;
   orig_cause_value: number | null;
   dest_cause_value: number | null;
   orig_cause_info: CauseInfo | null;
@@ -119,6 +122,7 @@ export interface CallFilters {
   device?: string;
   cause_code?: string;
   answered?: "" | "true" | "false";
+  direction?: "" | CallDirection;
   min_duration?: string;
   max_duration?: string;
 }

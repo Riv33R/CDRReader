@@ -6,7 +6,7 @@ from sqlalchemy import func, select
 
 from app.core.database import AsyncSessionLocal
 from app.models.cdr import CdrRecord, CmrRecord
-from app.services.parser import is_cucm_type_row, parse_cucm_ip, parse_file_bytes
+from app.services.parser import classify_direction, is_cucm_type_row, parse_cucm_ip, parse_file_bytes
 
 SAMPLE_CDR_CSV = (
     "cdrRecordType,globalCallID_callManagerId,globalCallID_callId,origLegCallIdentifier,"
@@ -39,6 +39,17 @@ def test_parse_cucm_ip():
 def test_is_cucm_type_row():
     assert is_cucm_type_row(["INTEGER", "INTEGER", "VARCHAR(50)"]) is True
     assert is_cucm_type_row(["1", "1", "1001"]) is False
+
+
+def test_classify_direction():
+    assert classify_direction("SEP001122334455", "SEP667788990011", "1001", "1002") == "internal"
+    assert classify_direction("SEP001122334455", "SIP_TRUNK_OUT", "1001", "89031234567") == "outbound"
+    assert classify_direction("SIP_TRUNK_IN", "HuntPilot_1000", "84957778899", "1000") == "inbound"
+    assert classify_direction("SIP_TRUNK_IN", "SEP001122334455", "+79031234567", "1001") == "inbound"
+    assert classify_direction("SEP667788990011", "CUBE_GW_01", "1002", "2001") == "outbound"
+    assert classify_direction(None, None, "84951112233", "1001") == "inbound"
+    assert classify_direction(None, None, "1001", "+79031112233") == "outbound"
+    assert classify_direction(None, None, "1001", "1002") == "internal"
 
 
 async def test_parse_cdr_and_deduplication():

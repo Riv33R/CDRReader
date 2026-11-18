@@ -15,6 +15,13 @@ async def dashboard_stats(
     date_from: datetime | None = None,
     date_to: datetime | None = None,
     granularity: str = Query("day", pattern="^(hour|day)$"),
+    direction: str | None = Query(None, pattern="^(inbound|outbound|internal)$"),
     db: AsyncSession = Depends(get_db),
 ) -> DashboardStatsOut:
-    return await get_dashboard_stats(db, date_from=date_from, date_to=date_to, granularity=granularity)
+    return await get_dashboard_stats(
+        db,
+        date_from=date_from,
+        date_to=date_to,
+        granularity=granularity,
+        direction=direction,
+    )

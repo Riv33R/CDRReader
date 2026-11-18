@@ -41,6 +41,7 @@ class CdrRecordOut(BaseModel):
     last_redirect_dn: str | None = None
     duration: int
     answered: bool
+    direction: str = "internal"
     orig_cause_value: int | None = None
     dest_cause_value: int | None = None
     orig_cause_info: CauseInfoOut | None = None

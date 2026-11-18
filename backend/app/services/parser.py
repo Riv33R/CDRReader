@@ -12,7 +12,37 @@ from typing import Any
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import settings
 from app.models.cdr import CdrRecord, CmrRecord
+
+INTERNAL_DEVICE_PREFIXES = (
+    "SEP",
+    "CSF",
+    "TCT",
+    "BOT",
+    "TAB",
+    "ATA",
+    "CIPC",
+    "UPC",
+    "HUNTPILOT",
+    "UNITY",
+    "UCCX",
+    "CTI",
+)
+
+EXTERNAL_DEVICE_MARKERS = (
+    "TRUNK",
+    "SIP",
+    "CUBE",
+    "MGCP",
+    "H323",
+    "PSTN",
+    "SBC",
+    "FXO",
+    "S0/",
+    "S1/",
+    "GW",
+)
 
 CDR_KNOWN_COLUMNS = {
     "cdrRecordType",
@@ -125,6 +155,40 @@ def _detect_file_type(headers: list[str]) -> str:
     return "unknown"
 
 
+def _is_external_leg(device_name: str | None, number: str | None) -> bool:
+    """Classify a CUCM call leg as external (PSTN/SIP trunk) vs internal endpoint."""
+    if device_name:
+        dev = device_name.strip().upper()
+        if dev.startswith(INTERNAL_DEVICE_PREFIXES):
+            return False
+        if any(marker in dev for marker in EXTERNAL_DEVICE_MARKERS):
+            return True
+    if number:
+        num = number.strip()
+        if num.startswith("+"):
+            return True
+        digits = "".join(ch for ch in num if ch.isdigit())
+        if len(digits) > settings.INTERNAL_NUMBER_MAX_LEN:
+            return True
+    return False
+
+
+def classify_direction(
+    orig_device: str | None,
+    dest_device: str | None,
+    calling_number: str | None,
+    called_number: str | None,
+) -> str:
+    """Return 'inbound', 'outbound', or 'internal' for a CUCM CDR record."""
+    orig_ext = _is_external_leg(orig_device, calling_number)
+    dest_ext = _is_external_leg(dest_device, called_number)
+    if orig_ext and not dest_ext:
+        return "inbound"
+    if dest_ext:
+        return "outbound"
+    return "internal"
+
+
 def _row_to_cdr_dict(row_dict: dict[str, str], source_file: str) -> dict[str, Any]:
     cm_id = parse_int(row_dict.get("globalCallID_callManagerId"))
     call_id = parse_int(row_dict.get("globalCallID_callId"))
@@ -138,11 +202,14 @@ def _row_to_cdr_dict(row_dict: dict[str, str], source_file: str) -> dict[str, An
     final_called = clean_str(row_dict.get("finalCalledPartyNumber"), 64)
     last_redir = clean_str(row_dict.get("lastRedirectDn"), 64)
     duration = parse_int(row_dict.get("duration")) or 0
+    orig_dev = clean_str(row_dict.get("origDeviceName"), 128)
+    dest_dev = clean_str(row_dict.get("destDeviceName"), 128)
 
     orig_ip = parse_cucm_ip(row_dict.get("origMediaTransportAddress_IP") or row_dict.get("origIpAddr"))
     dest_ip = parse_cucm_ip(row_dict.get("destMediaTransportAddress_IP") or row_dict.get("destIpAddr"))
 
     answered = ts_conn is not None and duration > 0
+    direction = classify_direction(orig_dev, dest_dev, calling, final_called or orig_called)
 
     extra: dict[str, Any] = {}
     for k, v in row_dict.items():
@@ -176,10 +243,11 @@ def _row_to_cdr_dict(row_dict: dict[str, str], source_file: str) -> dict[str, An
         "last_redirect_dn": last_redir,
         "duration": max(0, duration),
         "answered": answered,
+        "direction": direction,
         "orig_cause_value": parse_int(row_dict.get("origCause_value")),
         "dest_cause_value": parse_int(row_dict.get("destCause_value")),
-        "orig_device_name": clean_str(row_dict.get("origDeviceName"), 128),
-        "dest_device_name": clean_str(row_dict.get("destDeviceName"), 128),
+        "orig_device_name": orig_dev,
+        "dest_device_name": dest_dev,
         "orig_ip_addr": orig_ip,
         "dest_ip_addr": dest_ip,
         "orig_call_termination_on_behalf_of": parse_int(row_dict.get("origCallTerminationOnBehalfOf")),

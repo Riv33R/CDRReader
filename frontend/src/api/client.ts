@@ -27,7 +27,12 @@ async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> {
 }
 
 export const api = {
-  getDashboardStats(params: { date_from?: string; date_to?: string; granularity?: "hour" | "day" }) {
+  getDashboardStats(params: {
+    date_from?: string;
+    date_to?: string;
+    granularity?: "hour" | "day";
+    direction?: string;
+  }) {
     return fetchJson<DashboardStats>(`/api/dashboard/stats${buildQuery(params)}`);
   },
 

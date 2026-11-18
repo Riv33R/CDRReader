@@ -39,6 +39,7 @@ def _build_call_filters(
     device: str | None,
     cause_code: int | None,
     answered: bool | None,
+    direction: str | None,
     min_duration: int | None,
     max_duration: int | None,
 ) -> list[Any]:
@@ -84,6 +85,8 @@ def _build_call_filters(
         )
     if answered is not None:
         filters.append(CdrRecord.answered.is_(answered))
+    if direction:
+        filters.append(CdrRecord.direction == direction)
     if min_duration is not None:
         filters.append(CdrRecord.duration >= min_duration)
     if max_duration is not None:
@@ -105,12 +108,23 @@ async def list_calls(
     device: str | None = None,
     cause_code: int | None = None,
     answered: bool | None = None,
+    direction: str | None = Query(None, pattern="^(inbound|outbound|internal)$"),
     min_duration: int | None = Query(None, ge=0),
     max_duration: int | None = Query(None, ge=0),
     db: AsyncSession = Depends(get_db),
 ) -> CallsPageOut:
     filters = _build_call_filters(
-        date_from, date_to, number, calling, called, device, cause_code, answered, min_duration, max_duration
+        date_from,
+        date_to,
+        number,
+        calling,
+        called,
+        device,
+        cause_code,
+        answered,
+        direction,
+        min_duration,
+        max_duration,
     )
 
     count_stmt = select(func.count(CdrRecord.id))
@@ -155,13 +169,24 @@ async def export_calls(
     device: str | None = None,
     cause_code: int | None = None,
     answered: bool | None = None,
+    direction: str | None = Query(None, pattern="^(inbound|outbound|internal)$"),
     min_duration: int | None = Query(None, ge=0),
     max_duration: int | None = Query(None, ge=0),
     limit: int = Query(10000, ge=1, le=50000),
     db: AsyncSession = Depends(get_db),
 ) -> Response:
     filters = _build_call_filters(
-        date_from, date_to, number, calling, called, device, cause_code, answered, min_duration, max_duration
+        date_from,
+        date_to,
+        number,
+        calling,
+        called,
+        device,
+        cause_code,
+        answered,
+        direction,
+        min_duration,
+        max_duration,
     )
     stmt = select(CdrRecord)
     if filters:

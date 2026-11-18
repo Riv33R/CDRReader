@@ -8,9 +8,16 @@ from openpyxl.styles import Font
 from app.core.cause_codes import get_cause_info
 from app.models.cdr import CdrRecord
 
+DIRECTION_LABELS = {
+    "inbound": "Входящий",
+    "outbound": "Исходящий",
+    "internal": "Внутренний",
+}
+
 EXPORT_HEADERS = [
     "ID",
     "Global Call ID",
+    "Направление",
     "Дата/время начала (UTC)",
     "Дата/время ответа (UTC)",
     "Дата/время завершения (UTC)",
@@ -47,6 +54,7 @@ def _record_to_row(rec: CdrRecord) -> list[str | int]:
     return [
         rec.id,
         rec.global_call_id or "",
+        DIRECTION_LABELS.get(rec.direction, rec.direction or ""),
         _fmt_dt(rec.date_time_origination),
         _fmt_dt(rec.date_time_connect),
         _fmt_dt(rec.date_time_disconnect),

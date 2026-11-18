@@ -33,6 +33,7 @@ class CdrRecord(Base):
 
     duration: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     answered: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    direction: Mapped[str] = mapped_column(String(16), default="internal", nullable=False)
 
     orig_cause_value: Mapped[int | None] = mapped_column(Integer, nullable=True)
     dest_cause_value: Mapped[int | None] = mapped_column(Integer, nullable=True)
@@ -56,6 +57,7 @@ class CdrRecord(Base):
         Index("ix_cdr_orig_device", "orig_device_name"),
         Index("ix_cdr_dest_device", "dest_device_name"),
         Index("ix_cdr_global_call", "global_call_id_cm", "global_call_id"),
+        Index("ix_cdr_direction", "direction"),
     )
 
 

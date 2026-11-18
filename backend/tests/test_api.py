@@ -103,3 +103,52 @@ async def test_edge_cases_validation_and_cause_fallback(client: AsyncClient):
     r_csv = await client.get("/api/calls/export?format=csv")
     assert r_csv.status_code == 200
     assert "Normal Call Clearing" in r_csv.text
+
+
+async def test_direction_and_separate_calling_called_filters(client: AsyncClient):
+    cdr_mixed = (
+        "cdrRecordType,globalCallID_callManagerId,globalCallID_callId,origLegCallIdentifier,"
+        "dateTimeOrigination,callingPartyNumber,originalCalledPartyNumber,finalCalledPartyNumber,"
+        "dateTimeConnect,dateTimeDisconnect,lastRedirectDn,duration,origDeviceName,destDeviceName,"
+        "origCause_value,destCause_value,origMediaTransportAddress_IP,destMediaTransportAddress_IP,destLegIdentifier\n"
+        "1,1,7001,101,1700001000,1001,1002,1002,1700001002,1700001062,1002,60,SEP001,SEP002,16,16,167772682,335544842,201\n"
+        "1,1,7002,102,1700001100,1001,89031234567,89031234567,1700001105,1700001205,89031234567,100,SEP001,SIP_TRUNK_OUT,16,16,167772682,335544842,202\n"
+        "1,1,7003,103,1700001200,84957778899,1001,1001,1700001203,1700001243,1001,40,SIP_TRUNK_IN,SEP001,16,16,167772682,335544842,203\n"
+    )
+    r_up = await client.post(
+        "/api/imports/upload",
+        files={"file": ("cdr_dir.csv", cdr_mixed.encode("utf-8"), "text/csv")},
+    )
+    assert r_up.status_code == 200
+    assert r_up.json()["inserted_rows"] == 3
+
+    # Separate calling vs called does NOT mix records for 1001
+    r_calling = await client.get("/api/calls?calling=1001")
+    assert r_calling.status_code == 200
+    assert r_calling.json()["total"] == 2
+    assert all(item["calling_party_number"] == "1001" for item in r_calling.json()["items"])
+
+    r_called = await client.get("/api/calls?called=1001")
+    assert r_called.status_code == 200
+    assert r_called.json()["total"] == 1
+    assert r_called.json()["items"][0]["direction"] == "inbound"
+    assert r_called.json()["items"][0]["calling_party_number"] == "84957778899"
+
+    # Direction filtering
+    for direction, expected_count in [("inbound", 1), ("outbound", 1), ("internal", 1)]:
+        r_dir = await client.get(f"/api/calls?direction={direction}")
+        assert r_dir.status_code == 200
+        assert r_dir.json()["total"] == expected_count
+        assert r_dir.json()["items"][0]["direction"] == direction
+
+    # Dashboard direction filter
+    r_dash_in = await client.get("/api/dashboard/stats?direction=inbound")
+    assert r_dash_in.status_code == 200
+    assert r_dash_in.json()["total_calls"] == 1
+
+    # Export includes direction label and respects direction filter
+    r_exp = await client.get("/api/calls/export?format=csv&direction=outbound")
+    assert r_exp.status_code == 200
+    assert "Направление" in r_exp.text
+    assert "Исходящий" in r_exp.text
+    assert "84957778899" not in r_exp.text
