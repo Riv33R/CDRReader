@@ -4,6 +4,7 @@ import zipfile
 
 from sqlalchemy import func, select
 
+from app.core.config import settings
 from app.core.database import AsyncSessionLocal
 from app.models.cdr import CdrRecord, CmrRecord
 from app.services.parser import classify_direction, is_cucm_type_row, parse_cucm_ip, parse_file_bytes
@@ -92,3 +93,29 @@ async def test_parse_zip_with_cdr_and_cmr():
         cmr_cnt = (await db.execute(select(func.count(CmrRecord.id)))).scalar()
         assert cdr_cnt == 2
         assert cmr_cnt == 1
+
+
+async def test_parse_cmr_disabled():
+    old = settings.ENABLE_CMR_ANALYTICS
+    try:
+        settings.ENABLE_CMR_ANALYTICS = False
+        async with AsyncSessionLocal() as db:
+            stats = await parse_file_bytes(db, SAMPLE_CMR_CSV.encode("utf-8"), "cmr_test_disabled.csv")
+            assert stats.file_type == "cmr"
+            assert stats.skipped is True
+            assert stats.inserted_rows == 0
+    finally:
+        settings.ENABLE_CMR_ANALYTICS = old
+
+
+async def test_parse_cdr_disabled():
+    old = settings.ENABLE_CDR_ANALYTICS
+    try:
+        settings.ENABLE_CDR_ANALYTICS = False
+        async with AsyncSessionLocal() as db:
+            stats = await parse_file_bytes(db, SAMPLE_CDR_CSV.encode("utf-8"), "cdr_test_disabled.csv")
+            assert stats.file_type == "cdr"
+            assert stats.skipped is True
+            assert stats.inserted_rows == 0
+    finally:
+        settings.ENABLE_CDR_ANALYTICS = old

@@ -78,21 +78,33 @@ async def process_watch_dir_once() -> int:
                 job.total_rows = stats.total_rows
                 job.inserted_rows = stats.inserted_rows
                 job.duplicate_rows = stats.duplicate_rows
-                job.status = "completed"
-                job.finished_at = datetime.now(timezone.utc)
-                await db.commit()
 
-                dest = _unique_dest(archive_dir, entry.name)
-                await asyncio.to_thread(shutil.move, str(entry), str(dest))
-                processed += 1
-                logger.info(
-                    "Imported %s (%s): total=%d inserted=%d dup=%d",
-                    entry.name,
-                    stats.file_type,
-                    stats.total_rows,
-                    stats.inserted_rows,
-                    stats.duplicate_rows,
-                )
+                if stats.skipped:
+                    job.status = "skipped"
+                    job.error_message = stats.skip_reason
+                    job.finished_at = datetime.now(timezone.utc)
+                    await db.commit()
+
+                    # Deleted directly to avoid wasting archive storage
+                    await asyncio.to_thread(entry.unlink, True)
+                    processed += 1
+                    logger.info("Skipped and deleted %s (%s): %s", entry.name, stats.file_type, stats.skip_reason)
+                else:
+                    job.status = "completed"
+                    job.finished_at = datetime.now(timezone.utc)
+                    await db.commit()
+
+                    dest = _unique_dest(archive_dir, entry.name)
+                    await asyncio.to_thread(shutil.move, str(entry), str(dest))
+                    processed += 1
+                    logger.info(
+                        "Imported %s (%s): total=%d inserted=%d dup=%d",
+                        entry.name,
+                        stats.file_type,
+                        stats.total_rows,
+                        stats.inserted_rows,
+                        stats.duplicate_rows,
+                    )
             except Exception as exc:
                 await db.rollback()
                 logger.exception("Failed to import watch-dir file %s: %s", entry.name, exc)

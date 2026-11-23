@@ -1,5 +1,6 @@
 from httpx import AsyncClient
 
+from app.core.config import settings
 from tests.test_parser import SAMPLE_CDR_CSV, SAMPLE_CMR_CSV
 
 
@@ -152,3 +153,44 @@ async def test_direction_and_separate_calling_called_filters(client: AsyncClient
     assert "Направление" in r_exp.text
     assert "Исходящий" in r_exp.text
     assert "84957778899" not in r_exp.text
+
+
+async def test_public_config_endpoint(client: AsyncClient):
+    resp = await client.get("/api/config")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert "cdr_analytics_enabled" in data
+    assert "cmr_analytics_enabled" in data
+    assert data["cdr_analytics_enabled"] is True
+    assert data["cmr_analytics_enabled"] is True
+
+
+async def test_upload_when_cmr_disabled(client: AsyncClient):
+    old = settings.ENABLE_CMR_ANALYTICS
+    try:
+        settings.ENABLE_CMR_ANALYTICS = False
+        r_cmr = await client.post(
+            "/api/imports/upload",
+            files={"file": ("cmr_disabled.csv", SAMPLE_CMR_CSV.encode("utf-8"), "text/csv")},
+        )
+        assert r_cmr.status_code == 200
+        data = r_cmr.json()
+        assert data["status"] == "skipped"
+        assert data["inserted_rows"] == 0
+        assert "отключена" in (data["error_message"] or "")
+    finally:
+        settings.ENABLE_CMR_ANALYTICS = old
+
+
+async def test_dashboard_when_cdr_disabled(client: AsyncClient):
+    old = settings.ENABLE_CDR_ANALYTICS
+    try:
+        settings.ENABLE_CDR_ANALYTICS = False
+        r_dash = await client.get("/api/dashboard/stats")
+        assert r_dash.status_code == 200
+        data = r_dash.json()
+        assert data["total_calls"] == 0
+        assert data["answered_calls"] == 0
+        assert data["time_series"] == []
+    finally:
+        settings.ENABLE_CDR_ANALYTICS = old

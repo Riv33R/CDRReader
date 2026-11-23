@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { CheckCircle2, FileUp, RefreshCw, XCircle, Loader2 } from "lucide-react";
+import { CheckCircle2, FileUp, RefreshCw, XCircle, Loader2, MinusCircle } from "lucide-react";
 import { api } from "../api/client";
 import type { ImportJob } from "../types/cdr";
 import { formatDateTime } from "../utils/format";
@@ -177,6 +177,10 @@ export function ImportPage() {
                       ) : job.status === "failed" ? (
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md border bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-500/30 text-[11px] font-semibold">
                           <XCircle className="w-3 h-3" /> Ошибка
+                        </span>
+                      ) : job.status === "skipped" ? (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md border bg-slate-500/15 text-slate-700 dark:text-slate-300 border-slate-500/30 text-[11px] font-semibold" title={job.error_message || undefined}>
+                          <MinusCircle className="w-3 h-3" /> Пропущен
                         </span>
                       ) : (
                         <span className="text-[11px] text-amber-600 dark:text-amber-300 font-semibold">Обработка...</span>

@@ -8,6 +8,7 @@ from sqlalchemy import and_, desc, asc, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.cause_codes import get_cause_info
+from app.core.config import settings
 from app.core.database import get_db
 from app.models.cdr import CdrRecord, CmrRecord
 from app.schemas.cdr import CallsPageOut, CauseInfoOut, CdrDetailOut, CdrRecordOut, CmrRecordOut
@@ -218,7 +219,7 @@ async def get_call_detail(call_id: int, db: AsyncSession = Depends(get_db)) -> C
         raise HTTPException(status_code=404, detail="Call record not found")
 
     cmr_list: list[CmrRecordOut] = []
-    if rec.global_call_id is not None and rec.global_call_id_cm is not None:
+    if settings.ENABLE_CMR_ANALYTICS and rec.global_call_id is not None and rec.global_call_id_cm is not None:
         cmr_stmt = select(CmrRecord).where(
             and_(
                 CmrRecord.global_call_id_cm == rec.global_call_id_cm,

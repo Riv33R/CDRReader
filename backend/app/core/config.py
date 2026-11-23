@@ -1,3 +1,4 @@
+from pydantic import AliasChoices, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -8,6 +9,16 @@ class Settings(BaseSettings):
 
     APP_NAME: str = "Cisco CDR Reader"
     DATABASE_URL: str = "postgresql+asyncpg://cdrreader:cdrreader_secret_change_me@localhost:5432/cdrreader"
+
+    # Analytics & Ingestion Toggles
+    ENABLE_CDR_ANALYTICS: bool = Field(
+        default=True,
+        validation_alias=AliasChoices("ENABLE_CDR_ANALYTICS", "CDR_ANALYTICS_ENABLED", "ENABLE_CDR"),
+    )
+    ENABLE_CMR_ANALYTICS: bool = Field(
+        default=True,
+        validation_alias=AliasChoices("ENABLE_CMR_ANALYTICS", "CMR_ANALYTICS_ENABLED", "ENABLE_CMR"),
+    )
 
     # Watch-dir configuration
     WATCH_DIR_ENABLED: bool = True

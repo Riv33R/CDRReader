@@ -14,7 +14,7 @@ import {
 } from "recharts";
 import { Clock, PhoneIncoming, PhoneMissed, PhoneOutgoing } from "lucide-react";
 import { api } from "../api/client";
-import type { DashboardStats, TopItemPoint } from "../types/cdr";
+import type { AppConfig, DashboardStats, TopItemPoint } from "../types/cdr";
 import { formatDuration } from "../utils/format";
 
 const PIE_COLORS = ["#10b981", "#6366f1", "#f59e0b", "#f43f5e", "#06b6d4", "#8b5cf6", "#64748b"];
@@ -51,8 +51,13 @@ export function DashboardPage() {
   const [granularity, setGranularity] = useState<"day" | "hour">("day");
   const [direction, setDirection] = useState<"" | "inbound" | "outbound" | "internal">("");
   const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [config, setConfig] = useState<AppConfig | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    api.getConfig().then(setConfig).catch(() => {});
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -132,6 +137,12 @@ export function DashboardPage() {
       {error && (
         <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-700 dark:text-rose-300 text-xs">
           {error}
+        </div>
+      )}
+
+      {config && !config.cdr_analytics_enabled && (
+        <div className="p-4 rounded-xl text-xs font-semibold bg-amber-500/10 border border-amber-500/30 text-amber-800 dark:text-amber-300 flex items-center gap-2">
+          <span>⚠️ Аналитика вызовов (CDR) отключена в настройках сервера (ENABLE_CDR_ANALYTICS=false). Разбор входящих файлов CDR приостановлен.</span>
         </div>
       )}
 

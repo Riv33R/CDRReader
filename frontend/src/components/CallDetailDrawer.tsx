@@ -161,7 +161,7 @@ export function CallDetailDrawer({ detail, loading, onClose }: Props) {
                 </div>
                 {detail.cmr_records.length === 0 ? (
                   <div className="text-xs text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-dark-900/80 p-4 rounded-xl border border-slate-200 dark:border-slate-800">
-                    Связанные CMR-записи качества речи отсутствуют.
+                    Связанные CMR-записи качества речи отсутствуют (или сбор CMR отключен в конфигурации ENABLE_CMR_ANALYTICS=false).
                   </div>
                 ) : (
                   <div className="space-y-3">

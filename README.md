@@ -89,6 +89,21 @@ CDRReader содержит встроенный FTP-сервер на порту
    - **Directory Path**: `/cdr`.
 4. Убедитесь, что в **CUCM Administration** → **System** → **Service Parameters** → **Cisco CallManager** включён параметр `CDR Enabled Flag = True` (и при необходимости `Call Diagnostics Enabled = True` для CMR).
 
+## Отключение аналитики CDR или CMR (экономия места и ресурсов)
+
+В Cisco CUCM генерируются как звонковые записи (**CDR**), так и диагностические метрики качества (**CMR** — джиттер, потери пакетов, задержка).
+Если мониторинг качества связи CMR не требуется, его можно отключить в `.env`:
+
+```bash
+ENABLE_CDR_ANALYTICS=true   # true: разбор и аналитика звонков CDR; false: отключить
+ENABLE_CMR_ANALYTICS=false  # false: отключить CMR — файлы пропускаются и удаляются с диска без записи в базу данных
+```
+
+При `ENABLE_CMR_ANALYTICS=false`:
+- Поступающие файлы CMR не парсятся и не занимают место в PostgreSQL.
+- Файлы автоматически удаляются с диска после поступления, не засоряя папку архива.
+- В журнале импорта выводится статус `Пропущен`.
+
 ## CI / Тестирование на GitHub
 
 Workflow [ci.yml](.github/workflows/ci.yml) автоматически запускает при каждом `push` / `pull_request`:

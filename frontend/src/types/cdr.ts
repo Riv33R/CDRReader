@@ -109,6 +109,13 @@ export interface DashboardStats {
   top_devices: TopItemPoint[];
 }
 
+export interface AppConfig {
+  app_name: string;
+  cdr_analytics_enabled: boolean;
+  cmr_analytics_enabled: boolean;
+  ftp_server_enabled: boolean;
+}
+
 export interface CallFilters {
   page?: number;
   page_size?: number;

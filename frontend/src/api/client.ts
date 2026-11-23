@@ -1,4 +1,4 @@
-import type { CallFilters, CallsPage, CdrDetail, DashboardStats, ImportJob } from "../types/cdr";
+import type { AppConfig, CallFilters, CallsPage, CdrDetail, DashboardStats, ImportJob } from "../types/cdr";
 
 function buildQuery(params: Record<string, string | number | undefined>): string {
   const qs = new URLSearchParams();
@@ -27,6 +27,10 @@ async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> {
 }
 
 export const api = {
+  getConfig() {
+    return fetchJson<AppConfig>("/api/config");
+  },
+
   getDashboardStats(params: {
     date_from?: string;
     date_to?: string;

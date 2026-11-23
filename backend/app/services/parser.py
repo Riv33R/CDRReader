@@ -79,6 +79,8 @@ class ParseStats:
     total_rows: int = 0
     inserted_rows: int = 0
     duplicate_rows: int = 0
+    skipped: bool = False
+    skip_reason: str | None = None
 
 
 def parse_int(val: str | None) -> int | None:
@@ -329,6 +331,19 @@ async def parse_csv_stream(
     if file_type == "unknown":
         raise ValueError(f"Unrecognized CUCM CDR/CMR header in file '{filename}'")
 
+    if file_type == "cmr" and not settings.ENABLE_CMR_ANALYTICS:
+        return ParseStats(
+            file_type="cmr",
+            skipped=True,
+            skip_reason="Пропущен и удален: аналитика CMR отключена в конфигурации",
+        )
+    if file_type == "cdr" and not settings.ENABLE_CDR_ANALYTICS:
+        return ParseStats(
+            file_type="cdr",
+            skipped=True,
+            skip_reason="Пропущен и удален: аналитика CDR отключена в конфигурации",
+        )
+
     stats = ParseStats(file_type=file_type)
     batch: list[dict[str, Any]] = []
     model: type[CdrRecord] | type[CmrRecord] = CdrRecord if file_type == "cdr" else CmrRecord
@@ -369,6 +384,9 @@ async def parse_file_bytes(db: AsyncSession, content: bytes, filename: str) -> P
     if lower.endswith(".zip"):
         aggregated = ParseStats(file_type="cdr")
         seen_types: set[str] = set()
+        all_skipped = True
+        skip_reasons: list[str] = []
+        has_members = False
         try:
             zf_ctx = zipfile.ZipFile(io.BytesIO(content))
         except zipfile.BadZipFile as exc:
@@ -380,9 +398,14 @@ async def parse_file_bytes(db: AsyncSession, content: bytes, filename: str) -> P
                 member_parts = member.filename.replace("\\", "/").split("/")
                 if any(p == "__MACOSX" or p.startswith(".") for p in member_parts):
                     continue
+                has_members = True
                 member_bytes = zf.read(member.filename)
                 sub_stats = await parse_file_bytes(db, member_bytes, member.filename)
                 seen_types.add(sub_stats.file_type)
+                if not sub_stats.skipped:
+                    all_skipped = False
+                elif sub_stats.skip_reason:
+                    skip_reasons.append(sub_stats.skip_reason)
                 aggregated.total_rows += sub_stats.total_rows
                 aggregated.inserted_rows += sub_stats.inserted_rows
                 aggregated.duplicate_rows += sub_stats.duplicate_rows
@@ -392,6 +415,11 @@ async def parse_file_bytes(db: AsyncSession, content: bytes, filename: str) -> P
             aggregated.file_type = next(iter(seen_types))
         else:
             aggregated.file_type = "unknown"
+
+        if has_members and all_skipped:
+            aggregated.skipped = True
+            aggregated.skip_reason = skip_reasons[0] if skip_reasons else "Пропущен и удален: аналитика отключена в конфигурации"
+
         return aggregated
 
     if lower.endswith(".gz"):

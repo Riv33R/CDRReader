@@ -47,7 +47,11 @@ async def upload_cdr_file(
         job.total_rows = stats.total_rows
         job.inserted_rows = stats.inserted_rows
         job.duplicate_rows = stats.duplicate_rows
-        job.status = "completed"
+        if stats.skipped:
+            job.status = "skipped"
+            job.error_message = stats.skip_reason
+        else:
+            job.status = "completed"
         job.finished_at = datetime.now(timezone.utc)
         await db.commit()
         await db.refresh(job)

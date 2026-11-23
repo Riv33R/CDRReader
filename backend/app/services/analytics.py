@@ -5,6 +5,7 @@ from sqlalchemy import Integer, case, cast, func, literal_column, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.cause_codes import get_cause_info
+from app.core.config import settings
 from app.models.cdr import CdrRecord
 from app.schemas.cdr import (
     CauseDistributionPoint,
@@ -22,6 +23,21 @@ async def get_dashboard_stats(
     direction: str | None = None,
 ) -> DashboardStatsOut:
     """Aggregate CDR statistics for the dashboard."""
+    if not settings.ENABLE_CDR_ANALYTICS:
+        return DashboardStatsOut(
+            total_calls=0,
+            answered_calls=0,
+            missed_calls=0,
+            answer_rate=0.0,
+            total_duration=0,
+            avg_duration=0.0,
+            time_series=[],
+            cause_distribution=[],
+            top_callers=[],
+            top_called=[],
+            top_devices=[],
+        )
+
     filters: list[Any] = []
     if date_from is not None:
         filters.append(CdrRecord.date_time_origination >= date_from)

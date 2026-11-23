@@ -5,7 +5,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.routes import calls, dashboard, health, imports
+from app.api.routes import calls, config, dashboard, health, imports
 from app.core.config import settings
 from app.services.ftp_server import start_ftp_server, stop_ftp_server
 from app.services.watcher import sftp_poller_loop, watch_dir_loop
@@ -51,6 +51,7 @@ app.add_middleware(
 )
 
 app.include_router(health.router, prefix="/api")
+app.include_router(config.router, prefix="/api")
 app.include_router(calls.router, prefix="/api")
 app.include_router(dashboard.router, prefix="/api")
 app.include_router(imports.router, prefix="/api")
