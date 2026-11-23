@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.routes import calls, dashboard, health, imports
 from app.core.config import settings
+from app.services.ftp_server import start_ftp_server, stop_ftp_server
 from app.services.watcher import sftp_poller_loop, watch_dir_loop
 
 logging.basicConfig(
@@ -24,10 +25,14 @@ async def lifespan(_: FastAPI):
         tasks.append(asyncio.create_task(watch_dir_loop(stop_event)))
     if settings.SFTP_POLLER_ENABLED:
         tasks.append(asyncio.create_task(sftp_poller_loop(stop_event)))
+    if settings.FTP_SERVER_ENABLED:
+        start_ftp_server()
 
     try:
         yield
     finally:
+        if settings.FTP_SERVER_ENABLED:
+            stop_ftp_server()
         stop_event.set()
         for t in tasks:
             t.cancel()

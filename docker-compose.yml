@@ -38,7 +38,17 @@ services:
       SFTP_REMOTE_DIR: ${SFTP_REMOTE_DIR:-/cdr}
       SFTP_POLL_INTERVAL: ${SFTP_POLL_INTERVAL:-60}
       INTERNAL_NUMBER_MAX_LEN: ${INTERNAL_NUMBER_MAX_LEN:-6}
+      FTP_SERVER_ENABLED: ${FTP_SERVER_ENABLED:-true}
+      FTP_SERVER_PORT: ${FTP_SERVER_PORT:-21}
+      FTP_SERVER_USER: ${FTP_SERVER_USER:-cucm_ftp}
+      FTP_SERVER_PASSWORD: ${FTP_SERVER_PASSWORD:-cucm_secret_change_me}
+      FTP_SERVER_PASV_MIN: ${FTP_SERVER_PASV_MIN:-21100}
+      FTP_SERVER_PASV_MAX: ${FTP_SERVER_PASV_MAX:-21110}
+      FTP_SERVER_MASQUERADE_ADDRESS: ${FTP_SERVER_MASQUERADE_ADDRESS:-}
       TZ: ${TZ:-UTC}
+    ports:
+      - "${FTP_PORT:-21}:21"
+      - "21100-21110:21100-21110"
     volumes:
       - ${CDR_INBOX_DIR:-./data/cdr_inbox}:/data/cdr_inbox
       - ./data/cdr_archive:/data/cdr_archive

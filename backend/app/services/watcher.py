@@ -36,13 +36,22 @@ async def process_watch_dir_once() -> int:
         return 0
 
     processed = 0
-    for entry in sorted(watch_dir.iterdir()):
-        if not entry.is_file():
-            continue
-        if entry.name.startswith(".") or entry.name.endswith((".tmp", ".part")):
-            continue
+    candidate_files = []
+    try:
+        for item in sorted(watch_dir.rglob("*")):
+            if not item.is_file():
+                continue
+            if item.name.startswith(".") or item.name.endswith((".tmp", ".part")):
+                continue
+            if any(p.startswith(".") for p in item.relative_to(watch_dir).parts):
+                continue
+            candidate_files.append(item)
+    except Exception as exc:
+        logger.warning("Error scanning watch directory %s: %s", watch_dir, exc)
+        return 0
 
-        # Ensure file is not actively being written by SFTP/copy
+    for entry in candidate_files:
+        # Ensure file is not actively being written by SFTP/FTP/copy
         try:
             size_before = entry.stat().st_size
             await asyncio.sleep(0.3)

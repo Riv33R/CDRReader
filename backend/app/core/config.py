@@ -25,6 +25,16 @@ class Settings(BaseSettings):
     SFTP_REMOTE_DIR: str = "/cdr"
     SFTP_POLL_INTERVAL: int = 60
 
+    # Embedded FTP Server configuration (incoming receiver for Cisco CUCM Billing Server)
+    FTP_SERVER_ENABLED: bool = False
+    FTP_SERVER_HOST: str = "0.0.0.0"
+    FTP_SERVER_PORT: int = 21
+    FTP_SERVER_USER: str = "cucm_ftp"
+    FTP_SERVER_PASSWORD: str = "cucm_secret_change_me"
+    FTP_SERVER_PASV_MIN: int = 21100
+    FTP_SERVER_PASV_MAX: int = 21110
+    FTP_SERVER_MASQUERADE_ADDRESS: str = ""
+
     # Call direction classification (digits <= this length are treated as internal extensions)
     INTERNAL_NUMBER_MAX_LEN: int = 6
 

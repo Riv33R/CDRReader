@@ -11,7 +11,8 @@
   - Дедупликация записей при повторном импорте (`record_hash`).
   - Привязка CMR-метрик качества речи (jitter, latency, packet loss, VQMetrics) к вызовам.
 - **Способы загрузки данных**:
-  - Ручная загрузка через веб-интерфейс (Drag & Drop).
+  - Встроенный **FTP-сервер** (`FTP_SERVER_ENABLED=true`, порт `21` и passive порты `21100-21110`) — прямо в контейнере backend для прямого приёма выгрузок из Cisco CUCM Billing Server без настройки сторонних служб на хосте.
+  - Ручная загрузка через веб-интерфейс (Drag & Drop, CSV, .gz, .zip).
   - Автоматический мониторинг директории `./data/cdr_inbox` (`watch-dir`) с переносом в `cdr_archive` / `cdr_error` — удобно при использовании системного SFTP-сервера (порт `22`) на хосте.
   - Опциональный SFTP-клиент (`SFTP_POLLER_ENABLED=true`) для забора файлов с внешнего SFTP-сервера.
 - **Веб-интерфейс**:
@@ -35,7 +36,32 @@
    ```
 3. Откройте веб-интерфейс: `http://localhost:8080` (или порт из `FRONTEND_PORT`).
 
-## Настройка выгрузки в Cisco CUCM (через системный SFTP на порту 22)
+## Настройка выгрузки из Cisco CUCM по протоколу FTP (встроенный FTP-сервер)
+
+CDRReader содержит встроенный FTP-сервер на порту `21`, запущенный прямо в контейнере `backend`:
+
+1. В `.env` задайте логин и пароль для приёма файлов (или используйте значения по умолчанию):
+   ```bash
+   FTP_SERVER_ENABLED=true
+   FTP_PORT=21
+   FTP_SERVER_USER=cucm_ftp
+   FTP_SERVER_PASSWORD=cucm_secret_change_me
+   # Если сервер за NAT / внешним IP, укажите его для пассивного режима:
+   FTP_SERVER_MASQUERADE_ADDRESS=
+   ```
+2. В интерфейсе **Cisco Unified Serviceability** → **Tools** → **CDR Management**:
+   - Нажмите **Add Application Billing Server**.
+   - **Host Name / IP Address**: IP-адрес хоста с CDRReader.
+   - **User Name**: `cucm_ftp` (из `FTP_SERVER_USER`).
+   - **Password**: `cucm_secret_change_me` (из `FTP_SERVER_PASSWORD`).
+   - **Protocol**: выберите **FTP**.
+   - **Directory Path**: `/` (или `/cdr`).
+   - Нажмите **Add**. CUCM автоматически проверит подключение и начнёт отправлять файлы выгрузок в CDRReader.
+3. Убедитесь, что в **CUCM Administration** → **System** → **Service Parameters** → **Cisco CallManager** включены параметры:
+   - `CDR Enabled Flag = True`
+   - `Call Diagnostics Enabled = True` (для метрик CMR).
+
+## Настройка выгрузки в Cisco CUCM через системный SFTP (порт 22)
 
 Поскольку Cisco CUCM работает по SFTP только через стандартный порт `22`, проще всего использовать системный `sshd` на хосте:
 
